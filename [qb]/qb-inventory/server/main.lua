@@ -3,6 +3,7 @@ QBCore = exports['qb-core']:GetCoreObject()
 Inventories = {}
 Drops = {}
 RegisteredShops = {}
+PurchaseLocks = {}
 
 CreateThread(function()
     MySQL.query('SELECT * FROM inventories', {}, function(result)
@@ -133,6 +134,62 @@ function checkWeapon(source, item)
         RemoveWeaponFromPed(ped, weapon)
         TriggerClientEvent('qb-weapons:client:UseWeapon', source, { name = currentWeapon }, false)
     end
+end
+
+-- Safe, transactional removal of cash stored as inventory items across multiple slots.
+-- Returns true on success, false on failure.
+local function TransactionalRemoveCash(src, amount, reason)
+    if not src or amount <= 0 then return false end
+    if PurchaseLocks[src] then return false end
+    PurchaseLocks[src] = true
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player or not Player.PlayerData or type(Player.PlayerData.items) ~= 'table' then
+        PurchaseLocks[src] = nil
+        return false
+    end
+
+    -- gather cash slots
+    local cashSlots = {}
+    local total = 0
+    for _, it in pairs(Player.PlayerData.items) do
+        if it and it.name and it.amount and (tostring(it.name):lower() == 'cash' or tostring(it.name):lower() == 'money') then
+            table.insert(cashSlots, { slot = it.slot, amount = tonumber(it.amount) or 0 })
+            total = total + (tonumber(it.amount) or 0)
+        end
+    end
+
+    if total < amount then
+        PurchaseLocks[src] = nil
+        return false
+    end
+
+    local remaining = amount
+    local removed = {}
+    for _, s in pairs(cashSlots) do
+        if remaining <= 0 then break end
+        local take = math.min(s.amount, remaining)
+        local ok = RemoveItem(src, 'cash', take, s.slot, reason)
+        if ok then
+            table.insert(removed, { amount = take })
+            if GetResourceState("mh-cashasitem") ~= 'missing' then
+                exports['mh-cashasitem']:UpdateCash(src, 'cash', take, 'remove')
+            end
+            remaining = remaining - take
+        else
+            -- rollback
+            for _, r in pairs(removed) do
+                AddItem(src, 'cash', r.amount, false, nil, 'rollback')
+                if GetResourceState("mh-cashasitem") ~= 'missing' then
+                    exports['mh-cashasitem']:UpdateCash(src, 'cash', r.amount, 'add')
+                end
+            end
+            PurchaseLocks[src] = nil
+            return false
+        end
+    end
+
+    PurchaseLocks[src] = nil
+    return remaining == 0
 end
 
 -- Events
@@ -383,26 +440,12 @@ QBCore.Functions.CreateCallback('qb-inventory:server:attemptPurchase', function(
     end
 
     if totalCashItems >= price then
-        -- Remove across slots until we've removed the price amount
-        local remaining = price
-        for _, it in pairs(Player.PlayerData.items) do
-            if remaining <= 0 then break end
-            if it and it.name and it.amount and (tostring(it.name):lower() == 'cash' or tostring(it.name):lower() == 'money') and tonumber(it.amount) > 0 then
-                local slot = it.slot
-                local slotAmount = tonumber(it.amount) or 0
-                local take = math.min(slotAmount, remaining)
-                local removed = RemoveItem(source, 'cash', take, slot, 'shop-purchase')
-                if removed then
-                    if GetResourceState("mh-cashasitem") ~= 'missing' then
-                        exports['mh-cashasitem']:UpdateCash(source, 'cash', take, 'remove')
-                    end
-                    remaining = remaining - take
-                else
-                    TriggerClientEvent('QBCore:Notify', source, 'Failed to remove cash item from your inventory', 'error')
-                    cb(false)
-                    return
-                end
-            end
+        -- Use transactional removal helper to safely remove cash across slots
+        local ok = TransactionalRemoveCash(source, price, 'shop-purchase')
+        if not ok then
+            TriggerClientEvent('QBCore:Notify', source, 'Failed to remove cash item from your inventory', 'error')
+            cb(false)
+            return
         end
 
         -- Add purchased item

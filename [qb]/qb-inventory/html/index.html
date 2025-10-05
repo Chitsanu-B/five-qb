@@ -24,16 +24,13 @@
                     <div class="inventory-header">
                         <div class="labels-container">
                             <div class="inventory-label">
-                                <p>{{ inventoryLabel }} <span v-if="playerName">| {{ playerName }}</span> <span v-if="citizenid">| ID: {{ citizenid }}</span> <span v-if="serverId">| SID: {{ serverId }}</span></p>
+                                <p><span v-if="playerName">{{ playerName }}</span> <span v-if="citizenid">| ID: {{ citizenid }}</span> <span v-if="serverId">| SID: {{ serverId }}</span></p>
                                 <!-- <p>เงินสด ->   : {{ displayCash }} $ | ธนาคาร: {{ bank }} $</p> -->
                             </div>
                         </div>
                         <div class="labels-container">
                             <div class="inventory-label">
-                                <p><i class="fa-solid fa-wallet"></i>  $ {{ displayCash }}</p>
-                            </div>
-                            <div class="inventory-label">
-                                <p> <i class="fa-solid fa-credit-card"></i> $ {{ bank }}</p>
+                                <p><i class="fa-solid fa-wallet"></i>  $ {{ displayCash }}<i class="fa-solid fa-credit-card"></i> $ {{ bank }}<i class="fas fa-user"></i>{{ serverId }}</p>
                             </div>
                             <div class="current-weight">
                                 <p><i class="fas fa-weight-hanging"></i> {{ (playerWeight / 1000).toFixed(1) }} / {{ (maxWeight / 1000).toFixed(1) }}kg</p>
@@ -172,12 +169,9 @@
                     <div class="notification-title">
                         <p>{{ notificationType }} x{{ notificationAmount }}</p>
                     </div>
-                    <div class="item-slot-img">
+                    <div class="notification-item-slot-img">
                         <img :src="notificationImage" alt="" />
                     </div>
-                    <!-- <div class="notification-amount">
-                        <p>x{{ notificationAmount }}</p>
-                    </div> -->
                     <div class="notification-label">
                         <p>{{ notificationText }}</p>
                     </div>
