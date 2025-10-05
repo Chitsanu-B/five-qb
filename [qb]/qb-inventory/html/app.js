@@ -44,6 +44,23 @@ const InventoryContainer = Vue.createApp({
         shouldCenterInventory() {
             return this.isOtherInventoryEmpty;
         },
+        // Sum cash items in the player's inventory (items named 'cash')
+        cashFromItems() {
+            try {
+                return Object.values(this.playerInventory).reduce((sum, item) => {
+                    if (item && item.name && item.name.toLowerCase() === 'cash') {
+                        return sum + (Number(item.amount) || 0);
+                    }
+                    return sum;
+                }, 0);
+            } catch (e) {
+                return 0;
+            }
+        },
+        // Display cashFromItems when present, otherwise fallback to server-provided cash
+        displayCash() {
+            return this.cashFromItems > 0 ? this.cashFromItems : this.cash;
+        },
     },
     watch: {
         transferAmount(newVal) {
@@ -104,18 +121,30 @@ const InventoryContainer = Vue.createApp({
                 ghostElement: null,
                 dragStartInventoryType: "player",
                 transferAmount: null,
+                //cash and bank (for future reference)
+                cash: 0,
+                bank: 0,
+                citizenid: '',
+                playerName: '',
+                serverId: '',
             };
         },
         openInventory(data) {
             if (this.showHotbar) {
                 this.toggleHotbar(false);
             }
+            console.log('openInventory');
 
             this.isInventoryOpen = true;
             this.maxWeight = data.maxweight;
             this.totalSlots = data.slots;
             this.playerInventory = {};
             this.otherInventory = {};
+            this.cash = data.cash;
+            this.bank = data.bank;
+            this.citizenid = data.citizenid || '';
+            this.playerName = data.playerName || '';
+            this.serverId = data.serverId || '';
 
             if (data.inventory) {
                 if (Array.isArray(data.inventory)) {
@@ -168,6 +197,13 @@ const InventoryContainer = Vue.createApp({
         },
         updateInventory(data) {
             this.playerInventory = {};
+            this.cash = data.cash;
+            this.bank = data.bank;
+            this.citizenid = data.citizenid || '';
+            this.playerName = data.playerName || '';
+            this.serverId = data.serverId || '';
+
+            console.log('updateInventory');
 
             if (data.inventory) {
                 if (Array.isArray(data.inventory)) {
@@ -347,6 +383,7 @@ const InventoryContainer = Vue.createApp({
             if (!this.currentlyDraggingItem) {
                 return;
             }
+            console.log('endDrag');
 
             const elementsUnderCursor = document.elementsFromPoint(event.clientX, event.clientY);
 

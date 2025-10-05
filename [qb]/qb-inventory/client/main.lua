@@ -105,6 +105,32 @@ exports('HasItem', HasItem)
 
 -- Events
 
+-- Safe helper to get player's cash/bank. Prefers PlayerData.money but will fallback
+-- to scanning PlayerData.items for common cash item names if money table isn't present.
+local function GetLocalPlayerMoney()
+    local cash = 0
+    local bank = 0
+    if PlayerData and type(PlayerData.money) == 'table' then
+        cash = PlayerData.money.cash or 0
+        bank = PlayerData.money.bank or 0
+        return cash, bank
+    end
+
+    -- Fallback: scan inventory for items named like cash (used by mh-cashasitem or similar)
+    if PlayerData and type(PlayerData.items) == 'table' then
+        for _, item in pairs(PlayerData.items) do
+            if item and item.name and item.amount then
+                local name = tostring(item.name):lower()
+                if name == 'cash' or name == 'money' or name == 'banknote' then
+                    cash = cash + (tonumber(item.amount) or 0)
+                end
+            end
+        end
+    end
+    return cash, bank
+end
+
+
 RegisterNetEvent('qb-inventory:client:requiredItems', function(items, bool)
     local itemTable = {}
     if bool then
@@ -145,9 +171,27 @@ RegisterNetEvent('qb-inventory:client:updateInventory', function()
         items = PlayerData.items
     end
 
+    local cash, bank = GetLocalPlayerMoney()
+    local cid = ''
+    local pname = ''
+    if PlayerData then
+        if PlayerData.citizenid then cid = PlayerData.citizenid end
+        if PlayerData.charinfo and type(PlayerData.charinfo) == 'table' then
+            pname = tostring(PlayerData.charinfo.firstname or '') .. ' ' .. tostring(PlayerData.charinfo.lastname or '')
+            pname = pname:match('%S') and pname or (PlayerData.name or '')
+        else
+            pname = PlayerData.name or ''
+        end
+    end
+
     SendNUIMessage({
         action = 'update',
-        inventory = items
+        inventory = items,
+        cash = cash,
+        bank = bank,
+        citizenid = cid,
+        playerName = pname,
+        serverId = GetPlayerServerId(PlayerId())
     })
 end)
 
@@ -172,12 +216,31 @@ RegisterNetEvent('qb-inventory:client:openInventory', function(items, other)
     SetTimecycleModifier("hud_def_blur")
     SetTimecycleModifierStrength(1.0)
 
+    local cash, bank = GetLocalPlayerMoney()
+
+    local cid = ''
+    local pname = ''
+    if PlayerData then
+        if PlayerData.citizenid then cid = PlayerData.citizenid end
+        if PlayerData.charinfo and type(PlayerData.charinfo) == 'table' then
+            pname = tostring(PlayerData.charinfo.firstname or '') .. ' ' .. tostring(PlayerData.charinfo.lastname or '')
+            pname = pname:match('%S') and pname or (PlayerData.name or '')
+        else
+            pname = PlayerData.name or ''
+        end
+    end
+
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'open',
         inventory = items,
         slots = Config.MaxSlots,
         maxweight = Config.MaxWeight,
+        cash = cash,
+        bank = bank,
+        citizenid = cid,
+        playerName = pname,
+        serverId = GetPlayerServerId(PlayerId()),
         other = other
     })
 end)
@@ -327,3 +390,11 @@ end
 
 RegisterKeyMapping('openInv', Lang:t('inf_mapping.opn_inv'), 'keyboard', Config.Keybinds.Open)
 RegisterKeyMapping('toggleHotbar', Lang:t('inf_mapping.tog_slots'), 'keyboard', Config.Keybinds.Hotbar)
+
+RegisterNetEvent('QBCore:Client:OnMoneyChange', function(moneytype, amount, changeType, reason)
+    if moneytype ~= "cash" then return end  -- สนใจเฉพาะ cash
+
+    
+    TriggerEvent('inventory:client:UpdatePlayerInventory', PlayerData.items)
+end)
+

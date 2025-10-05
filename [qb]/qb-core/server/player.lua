@@ -664,3 +664,31 @@ function QBCore.Player.CreateSerialNumber()
 end
 
 PaycheckInterval() -- This starts the paycheck system
+
+--==============================--
+-- 💸 CASH ITEM SYNC SYSTEM 💰 --
+--==============================--
+
+AddEventHandler('QBCore:Server:OnMoneyChange', function(src, moneytype, amount, changeType, reason)
+    if moneytype ~= "cash" then return end
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+
+    local currentCash = Player.PlayerData.money["cash"] or 0
+    local cashItem = Player.Functions.GetItemByName("cash")
+
+    -- ปรับจำนวน item cash ให้ตรงกับเงินจริงเสมอ
+    if cashItem then
+        local diff = currentCash - cashItem.amount
+        if diff > 0 then
+            Player.Functions.AddItem("cash", diff)
+        elseif diff < 0 then
+            Player.Functions.RemoveItem("cash", math.abs(diff))
+        end
+    else
+        -- ถ้ายังไม่มี item cash แต่มีเงินจริง → ให้เพิ่ม item cash เข้ามา
+        if currentCash > 0 then
+            Player.Functions.AddItem("cash", currentCash)
+        end
+    end
+end)

@@ -24,11 +24,19 @@
                     <div class="inventory-header">
                         <div class="labels-container">
                             <div class="inventory-label">
-                                <p>{{ inventoryLabel }} {{ playerMoney }} </p>
-                                <p>เงินสด -> : {{ cash }} $ | ธนาคาร: {{ bank }} ddd$</p>
+                                <p>{{ inventoryLabel }} <span v-if="playerName">| {{ playerName }}</span> <span v-if="citizenid">| ID: {{ citizenid }}</span> <span v-if="serverId">| SID: {{ serverId }}</span></p>
+                                <!-- <p>เงินสด ->   : {{ displayCash }} $ | ธนาคาร: {{ bank }} $</p> -->
+                            </div>
+                        </div>
+                        <div class="labels-container">
+                            <div class="inventory-label">
+                                <p><i class="fa-solid fa-wallet"></i>  $ {{ displayCash }}</p>
+                            </div>
+                            <div class="inventory-label">
+                                <p> <i class="fa-solid fa-credit-card"></i> $ {{ bank }}</p>
                             </div>
                             <div class="current-weight">
-                                <p>{{ (playerWeight / 1000).toFixed(1) }} / {{ (maxWeight / 1000).toFixed(1) }}</p>
+                                <p><i class="fas fa-weight-hanging"></i> {{ (playerWeight / 1000).toFixed(1) }} / {{ (maxWeight / 1000).toFixed(1) }}kg</p>
                             </div>
                         </div>
                         <div class="weight-bar">
@@ -162,15 +170,15 @@
             <div class="notification-container" v-if="showNotification">
                 <div class="notification-slot">
                     <div class="notification-title">
-                        <p>{{ notificationType }}</p>
+                        <p>{{ notificationType }} x{{ notificationAmount }}</p>
                     </div>
                     <div class="item-slot-img">
                         <img :src="notificationImage" alt="" />
                     </div>
-                    <div class="item-slot-amount">
+                    <!-- <div class="notification-amount">
                         <p>x{{ notificationAmount }}</p>
-                    </div>
-                    <div class="item-slot-label">
+                    </div> -->
+                    <div class="notification-label">
                         <p>{{ notificationText }}</p>
                     </div>
                 </div>

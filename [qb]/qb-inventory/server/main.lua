@@ -243,6 +243,8 @@ end)
 RegisterNetEvent('qb-inventory:server:openDrop', function(dropId)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
+    local cash = Player.PlayerData.money["cash"]
+    local bank = Player.PlayerData.money["bank"]
     if not Player then return end
     local playerPed = GetPlayerPed(src)
     local playerCoords = GetEntityCoords(playerPed)
@@ -259,7 +261,7 @@ RegisterNetEvent('qb-inventory:server:openDrop', function(dropId)
         inventory = drop.items
     }
     drop.isOpen = true
-    TriggerClientEvent('qb-inventory:client:openInventory', source, Player.PlayerData.items, formattedInventory)
+    TriggerClientEvent('qb-inventory:client:openInventory', source, Player.PlayerData.items, formattedInventory , cash, bank)
 end)
 
 RegisterNetEvent('qb-inventory:server:updateDrop', function(dropId, coords)
@@ -365,12 +367,64 @@ QBCore.Functions.CreateCallback('qb-inventory:server:attemptPurchase', function(
         return
     end
 
+
     local price = shopInfo.items[itemInfo.slot].price * amount
-    if Player.PlayerData.money.cash >= price then
-        Player.Functions.RemoveMoney('cash', price, 'shop-purchase')
+
+    -- First, check for cash stored as inventory items (e.g., mh-cashasitem)
+    local totalCashItems = 0
+    if Player.PlayerData and type(Player.PlayerData.items) == 'table' then
+        for _, it in pairs(Player.PlayerData.items) do
+            if it and it.name and it.amount then
+                if tostring(it.name):lower() == 'cash' or tostring(it.name):lower() == 'money' then
+                    totalCashItems = totalCashItems + (tonumber(it.amount) or 0)
+                end
+            end
+        end
+    end
+
+    if totalCashItems >= price then
+        -- Remove across slots until we've removed the price amount
+        local remaining = price
+        for _, it in pairs(Player.PlayerData.items) do
+            if remaining <= 0 then break end
+            if it and it.name and it.amount and (tostring(it.name):lower() == 'cash' or tostring(it.name):lower() == 'money') and tonumber(it.amount) > 0 then
+                local slot = it.slot
+                local slotAmount = tonumber(it.amount) or 0
+                local take = math.min(slotAmount, remaining)
+                local removed = RemoveItem(source, 'cash', take, slot, 'shop-purchase')
+                if removed then
+                    if GetResourceState("mh-cashasitem") ~= 'missing' then
+                        exports['mh-cashasitem']:UpdateCash(source, 'cash', take, 'remove')
+                    end
+                    remaining = remaining - take
+                else
+                    TriggerClientEvent('QBCore:Notify', source, 'Failed to remove cash item from your inventory', 'error')
+                    cb(false)
+                    return
+                end
+            end
+        end
+
+        -- Add purchased item
         AddItem(source, itemInfo.name, amount, nil, itemInfo.info, 'shop-purchase')
         TriggerEvent('qb-shops:server:UpdateShopItems', shop, itemInfo, amount)
+
+        -- Push an update so UI reflects changes immediately
+        TriggerClientEvent('qb-inventory:client:updateInventory', source)
         cb(true)
+
+    elseif Player.PlayerData and Player.PlayerData.money and (Player.PlayerData.money.cash or 0) >= price then
+        -- Fallback to the legacy cash wallet removal
+        Player.Functions.RemoveMoney('cash', price, 'shop-purchase')
+        AddItem(source, itemInfo.name, amount, nil, itemInfo.info, 'shop-purchase')
+        if GetResourceState("mh-cashasitem") ~= 'missing' then
+            -- keep mh-cashasitem in sync if present
+            exports['mh-cashasitem']:UpdateCash(source, 'cash', price, 'remove')
+        end
+        TriggerEvent('qb-shops:server:UpdateShopItems', shop, itemInfo, amount)
+        TriggerClientEvent('qb-inventory:client:updateInventory', source)
+        cb(true)
+
     else
         TriggerClientEvent('QBCore:Notify', source, 'You do not have enough money', 'error')
         cb(false)
