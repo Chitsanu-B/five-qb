@@ -1,9 +1,9 @@
 fx_version 'cerulean'
 game 'gta5'
 
-author 'imahdi'
-description 'Target System For QB_CORE Nopixel 4.0 Inspired, Based On qb-target'
-version '1.0'
+author 'BerkieB'
+description 'An optimized interaction system for FiveM, based on qtarget'
+version '5.5.0'
 
 ui_page 'html/index.html'
 
@@ -19,9 +19,7 @@ client_scripts {
 
 files {
 	'data/*.lua',
-	'html/*.html',
-	'html/css/*.css',
-	'html/js/*.js'
+	'html/**',
 }
 
 lua54 'yes'
