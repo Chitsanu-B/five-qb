@@ -127,6 +127,25 @@ if Config.EnableDefaultOptions then
                 ToggleDoor(entity, BackEngineVehicles[GetEntityModel(entity)] and 4 or 5)
             end,
             distance = 0.9
+        },
+        {
+            icon = 'fas fa-tshirt',
+            label = 'เปลี่ยนเสื้อผ้า',
+            action = function(entity)
+                -- ToggleDoor(entity, BackEngineVehicles[GetEntityModel(entity)] and 4 or 5)
+                local coords = GetEntityCoords(entity)
+                -- สร้าง outfitRoom ชั่วคราว (fields ที่ใช้บ่อยคือ coords, width/length/heading, job)
+                local outfitRoom = {
+                    coords = coords,
+                    width = 1.0,
+                    length = 1.0,
+                    heading = GetEntityHeading(entity),
+                    job = nil, -- กำหนดถ้าต้องการจำกัด job
+                    -- คุณสามารถเพิ่ม fields อื่น ๆ ที่ OpenOutfitRoom ต้องการได้
+                }
+                TriggerEvent('illenium-appearance:client:OpenTrunkOutfit', outfitRoom)
+            end,
+            distance = 0.9
         }
     }
 end

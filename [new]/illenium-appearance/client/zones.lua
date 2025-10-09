@@ -195,3 +195,22 @@ RegisterNetEvent("illenium-appearance:client:OpenPlayerOutfitRoom", function()
     local outfitRoom = Config.PlayerOutfitRooms[currentZone.index]
     OpenOutfitRoom(outfitRoom)
 end)
+
+RegisterNetEvent("illenium-appearance:client:OpenTrunkOutfit", function()
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
+
+    local outfitRoom = {
+        coords = coords,
+        width = 1.0,
+        length = 1.0,
+        heading = heading,
+        job = nil,
+        gang = nil,
+        gender = nil,
+        citizenIDs = {}, -- ✅ แก้ error ตรงนี้
+    }
+
+    OpenOutfitRoom(outfitRoom)
+end)
