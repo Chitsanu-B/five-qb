@@ -147,21 +147,32 @@ RegisterNetEvent('QBCore:Server:TriggerCallback', function(name, ...)
 end)
 
 -- Player
-
+local frozenPlayers = {}
+RegisterNetEvent('player:freezeNeeds', function(state)
+    local src = source
+    frozenPlayers[src] = state
+end)
 RegisterNetEvent('QBCore:UpdatePlayer', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     if not Player then return end
-    local newHunger = Player.PlayerData.metadata['hunger'] - QBCore.Config.Player.HungerRate
-    local newThirst = Player.PlayerData.metadata['thirst'] - QBCore.Config.Player.ThirstRate
-    if newHunger <= 0 then
-        newHunger = 0
+
+    local hunger = Player.PlayerData.metadata['hunger']
+    local thirst = Player.PlayerData.metadata['thirst']
+
+    -- ✅ ถ้าอยู่ในโซนไม่ต้องลด
+    if frozenPlayers[src] then
+        Player.Functions.SetMetaData('hunger', hunger)
+        Player.Functions.SetMetaData('thirst', thirst)
+        return
     end
-    if newThirst <= 0 then
-        newThirst = 0
-    end
-    Player.Functions.SetMetaData('thirst', newThirst)
+
+    -- 🔻 ถ้าอยู่นอกโซน ลดค่าปกติ
+    local newHunger = math.max(0, hunger - QBCore.Config.Player.HungerRate)
+    local newThirst = math.max(0, thirst - QBCore.Config.Player.ThirstRate)
+
     Player.Functions.SetMetaData('hunger', newHunger)
+    Player.Functions.SetMetaData('thirst', newThirst)
     TriggerClientEvent('hud:client:UpdateNeeds', src, newHunger, newThirst)
     Player.Functions.Save()
 end)

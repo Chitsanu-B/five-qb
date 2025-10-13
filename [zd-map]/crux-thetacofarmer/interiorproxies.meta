@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SInteriorOrderData>
+	<startFrom value="2049" />
+	<proxies>
+		<!-- Unknown -->
+		<Item>iconic_taco_ext_strm</Item>
+		<Item>iconic_taco_int_milo</Item>
+		<Item>lr_sc1_18</Item>
+		<Item>lr_sc1_18_strm_0</Item>
+		<Item>lr_sc1_occl_00</Item>
+		<Item>lr_sc1_rd_strm_2</Item>
+	</proxies>
+</SInteriorOrderData>

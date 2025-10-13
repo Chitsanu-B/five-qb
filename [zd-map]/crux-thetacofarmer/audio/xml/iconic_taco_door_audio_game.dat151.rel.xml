@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dat151>
+  <Version value="9458585" />
+  <Items>
+    <Item type="Door" ntOffset="0">
+      <Name>d_iconic_taco_glass_door01</Name>
+      <SoundSet>hash_7f11a20c</SoundSet>
+      <Params>hash_0246d335</Params>
+      <Unk1 value="0.7" />
+    </Item>
+    <Item type="Door" ntOffset="0">
+      <Name>d_iconic_taco_glass_door02</Name>
+      <SoundSet>hash_7f11a20c</SoundSet>
+      <Params>hash_0246d335</Params>
+      <Unk1 value="0.7" />
+    </Item>
+    <Item type="Door" ntOffset="0">
+      <Name>d_iconic_taco_glass_door03</Name>
+      <SoundSet>hash_7f11a20c</SoundSet>
+      <Params>hash_0246d335</Params>
+      <Unk1 value="0.7" />
+    </Item>
+    <Item type="Door" ntOffset="0">
+      <Name>d_iconic_taco_sl_window01</Name>
+      <SoundSet>hash_c9e95a9a</SoundSet>
+      <Params>hash_25b9f39f</Params>
+      <Unk1 value="0.9" />
+    </Item>
+    <Item type="Door" ntOffset="0">
+      <Name>d_iconic_taco_sl_window02</Name>
+      <SoundSet>hash_c9e95a9a</SoundSet>
+      <Params>hash_25b9f39f</Params>
+      <Unk1 value="0.9" />
+    </Item>
+    <Item type="DoorModel" ntOffset="0">
+      <Name>dasl_b84c4ce8</Name>
+      <Door>d_iconic_taco_glass_door01</Door>
+    </Item>
+    <Item type="DoorModel" ntOffset="0">
+      <Name>dasl_e9262e9b</Name>
+      <Door>d_iconic_taco_glass_door02</Door>
+    </Item>
+    <Item type="DoorModel" ntOffset="0">
+      <Name>dasl_d45c0507</Name>
+      <Door>d_iconic_taco_glass_door03</Door>
+    </Item>
+    <Item type="DoorModel" ntOffset="0">
+      <Name>dasl_82f38fc5</Name>
+      <Door>d_iconic_taco_sl_window01</Door>
+    </Item>
+    <Item type="DoorModel" ntOffset="0">
+      <Name>dasl_1dc6c565</Name>
+      <Door>d_iconic_taco_sl_window02</Door>
+    </Item>
+  </Items>
+</Dat151>
